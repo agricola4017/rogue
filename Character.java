@@ -1,54 +1,95 @@
 public class Character {
-    //private int level;
+    public enum CharacterType {
+        WARRIOR(5, 3, 4),
+        ARCHER(3, 4, 2),
+        MAGE(2, 5, 1);
+
+        private final int baseHp;
+        private final int baseAttack;
+        private final int baseDefense;
+
+        CharacterType(int baseHp, int baseAttack, int baseDefense) {
+            this.baseHp = baseHp;
+            this.baseAttack = baseAttack;
+            this.baseDefense = baseDefense;
+        }
+    }
+
+    private CharacterType type;
     private int hp;
+    private int maxHp;
     private int attack;
     private int defense;
-    private int wins;
+    private int position; // 0-5 for positioning
+    private boolean isAlive;
 
-    public Character(int hp, int attack, int defense) {
-        this.hp = hp;
-        this.attack = attack;
-        this.defense = defense;
-        this.wins = 0;
+    public Character(CharacterType type, int position) {
+        this.type = type;
+        this.hp = type.baseHp;
+        this.maxHp = type.baseHp;
+        this.attack = type.baseAttack;
+        this.defense = type.baseDefense;
+        this.position = position;
+        this.isAlive = true;
     }
+
     @Override
     public String toString() {
-        return "{" +
-                "hp=" + hp +
+        return type + "{" +
+                "hp=" + hp + "/" + maxHp +
                 ", attack=" + attack +
-               // ", defense=" + defense +
+                ", defense=" + defense +
+                ", pos=" + position +
                 '}';
     }
 
     public void atkUp() {
-        this.attack +=1;
+        this.attack += 1;
     }
 
     public void hpUp() {
-        this.hp +=3;
+        this.maxHp += 3;
+        this.hp += 3;
     }
 
-    public void restoreHP(int round) {
-        int heal = (int)Math.round(0.5*(3*round - this.hp));
-        this.hp += heal;
-    }
-    public static boolean fight(Character a, Character b) {
-        while (a.getHp() >= 0 && b.getHp() >+ 0) {
-            a.setHp(a.getHp()-b.getAttack());
-            b.setHp(b.getHp()-a.getAttack());
+    public void takeDamage(int damage) {
+        int actualDamage = Math.max(1, damage - this.defense);
+        this.hp -= actualDamage;
+        if (this.hp <= 0) {
+            this.hp = 0;
+            this.isAlive = false;
         }
-
-        return a.getHp() >= 0;
     }
 
-    public static Character generateEnemy(int level) {
-        int factor = 2;
-        int hp = (int)Math.round(Math.random()*level*factor*2);
-        int atk = (int)Math.round(Math.random()*level);
-        int def = (int)Math.round(Math.random()*level*factor);
+    public Character findTarget(Character[] enemies) {
+        // Simple targeting logic: target closest enemy
+        Character target = null;
+        int minDistance = Integer.MAX_VALUE;
+        
+        for (Character enemy : enemies) {
+            if (enemy != null && enemy.isAlive) {
+                int distance = Math.abs(this.position - enemy.position);
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    target = enemy;
+                }
+            }
+        }
+        return target;
+    }
 
-        //System.out.println("stats are " + Math.random() +  level + " " + factor);
-        return new Character(hp, atk, def);
+    public static Character generateEnemy(int level, int position) {
+        CharacterType[] types = CharacterType.values();
+        CharacterType randomType = types[(int)(Math.random() * types.length)];
+        Character enemy = new Character(randomType, position);
+        
+        // Scale stats based on level
+        for (int i = 1; i < level; i++) {
+            enemy.atkUp();
+            enemy.hpUp();
+        }
+        
+        return enemy;
     }
 
     public int getHp() {
@@ -57,6 +98,14 @@ public class Character {
 
     public void setHp(int hp) {
         this.hp = hp;
+    }
+
+    public int getMaxHp() {
+        return maxHp;
+    }
+
+    public void setMaxHp(int maxHp) {
+        this.maxHp = maxHp;
     }
 
     public int getAttack() {
@@ -75,11 +124,27 @@ public class Character {
         this.defense = defense;
     }
 
-    public int getWins() {
-        return wins;
+    public int getPosition() {
+        return position;
     }
 
-    public void setWins(int wins) {
-        this.wins = wins;
+    public void setPosition(int position) {
+        this.position = position;
+    }
+
+    public boolean isAlive() {
+        return isAlive;
+    }
+
+    public void setAlive(boolean alive) {
+        isAlive = alive;
+    }
+
+    public CharacterType getType() {
+        return type;
+    }
+
+    public void setType(CharacterType type) {
+        this.type = type;
     }
 }
